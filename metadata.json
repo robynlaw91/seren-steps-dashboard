@@ -1,0 +1,5 @@
+{
+  "name": "Seren Steps Manager Dashboard",
+  "description": "A streamlined, static dashboard for managing external links and resources with local persistence.",
+  "requestFramePermissions": []
+}
