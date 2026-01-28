@@ -21,12 +21,12 @@ export const TileCard: React.FC<TileCardProps> = ({ tile }) => {
     setImageError(false);
   }, [tile.imageUrl]);
 
-  const CardContent = (
+  return (
     <div className={`
-      relative h-full flex flex-col p-6 rounded-xl border transition-all duration-200
-      ${isValidUrl 
-        ? 'bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-teal-400 group cursor-pointer' 
-        : 'bg-slate-50 border-slate-200 opacity-70 cursor-not-allowed'}
+      relative h-full flex flex-col p-6 rounded-xl border-2 transition-all duration-200
+      ${isValidUrl
+        ? 'bg-white border-slate-300 shadow-sm hover:shadow-md hover:border-teal-500 group'
+        : 'bg-slate-50 border-slate-300 opacity-70'}
     `}>
       <div className="flex items-start justify-between mb-4">
         <div className={`
@@ -34,9 +34,9 @@ export const TileCard: React.FC<TileCardProps> = ({ tile }) => {
           ${isValidUrl ? 'bg-teal-50 text-teal-700 group-hover:bg-teal-100' : 'bg-slate-200 text-slate-400'}
         `}>
           {showImage ? (
-            <img 
-              src={tile.imageUrl} 
-              alt="" 
+            <img
+              src={tile.imageUrl}
+              alt=""
               className="w-full h-full object-contain p-2"
               onError={() => setImageError(true)}
             />
@@ -45,16 +45,25 @@ export const TileCard: React.FC<TileCardProps> = ({ tile }) => {
           )}
         </div>
         {isValidUrl && (
-          <ExternalLink size={16} className="text-slate-400 group-hover:text-teal-600 transition-colors" />
+          <a
+            href={tile.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 -m-2 rounded-lg text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+            title={`Open ${tile.label}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink size={20} strokeWidth={2.5} />
+          </a>
         )}
       </div>
-      
-      <h3 className={`font-semibold text-lg mb-1 truncate ${isValidUrl ? 'text-slate-800 group-hover:text-teal-800' : 'text-slate-500'}`}>
+
+      <h3 className={`font-bold text-lg mb-1 truncate ${isValidUrl ? 'text-slate-900' : 'text-slate-600'}`}>
         {tile.label}
       </h3>
-      
+
       {tile.description && (
-        <p className="text-sm text-slate-500 line-clamp-2">
+        <p className="text-sm text-slate-700 font-medium line-clamp-2">
           {tile.description}
         </p>
       )}
@@ -67,19 +76,4 @@ export const TileCard: React.FC<TileCardProps> = ({ tile }) => {
       )}
     </div>
   );
-
-  if (isValidUrl) {
-    return (
-      <a 
-        href={tile.url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="block h-full focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 rounded-xl"
-      >
-        {CardContent}
-      </a>
-    );
-  }
-
-  return <div className="h-full">{CardContent}</div>;
 };

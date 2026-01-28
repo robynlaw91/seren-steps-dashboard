@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Settings, Clock, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Settings, Clock, Loader2, AlertCircle } from 'lucide-react';
 import { TileCard } from './components/TileCard';
 import { LinkManager } from './components/LinkManager';
 import { DEFAULT_TILES } from './constants';
@@ -201,9 +201,11 @@ export default function App() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="bg-teal-600 p-2 rounded-lg text-white shadow-md">
-              <Sparkles size={24} fill="currentColor" className="text-white" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Seren Steps Care Logo"
+              className="h-14 w-14 object-contain"
+            />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
                 Seren Steps <span className="text-teal-600">Manager Dashboard</span>
@@ -220,7 +222,7 @@ export default function App() {
               </div>
               <input
                 type="text"
-                placeholder="Find an app..."
+                placeholder="Find a link..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-full leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm transition-all"
@@ -237,7 +239,7 @@ export default function App() {
               </div>
               <input
                 type="text"
-                placeholder="Find an app..."
+                placeholder="Find a link..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 sm:text-sm"
@@ -303,11 +305,11 @@ export default function App() {
       {/* Footer / Manager Toggle */}
       <footer className="mt-auto">
         {!isManaging ? (
-          <div className="bg-white border-t border-slate-200 py-4">
+          <div className="bg-teal-600 border-t border-teal-700 py-4">
             <div className="max-w-7xl mx-auto px-4 flex justify-center">
               <button
                 onClick={() => setIsManaging(true)}
-                className="flex items-center text-sm text-slate-500 hover:text-teal-600 transition-colors px-4 py-2 rounded-md hover:bg-slate-50"
+                className="flex items-center text-sm text-white hover:text-teal-100 transition-colors px-4 py-2 rounded-md hover:bg-teal-700"
               >
                 <Settings size={16} className="mr-2" />
                 Manage Links
