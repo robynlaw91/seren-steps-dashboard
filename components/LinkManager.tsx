@@ -85,9 +85,10 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
 
       // Update the tile with the new image URL
       setTiles(prev => prev.map(t => t.id === id ? { ...t, imageUrl: publicUrl } : t));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error uploading image:', err);
-      alert('Failed to upload image. Please try again.');
+      const errorMsg = err?.message || err?.error_description || 'Unknown error';
+      alert(`Failed to upload image: ${errorMsg}`);
     } finally {
       setUploadingId(null);
       // Reset file input so the same file can be selected again if needed
