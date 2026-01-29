@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, RotateCcw, X, AlertCircle, Plus, Trash2, GripVertical, Loader2 } from 'lucide-react';
+import { Save, RotateCcw, X, AlertCircle, Plus, Trash2, Loader2 } from 'lucide-react';
 import { TileDefinition } from '../types';
 import { IconMap } from '../constants';
 import { supabase, IMAGES_BUCKET } from '../lib/supabase';
@@ -21,8 +21,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
 }) => {
   const [tiles, setTiles] = useState<TileDefinition[]>([]);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     // Deep copy to avoid mutating props directly
@@ -51,50 +50,14 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
     setTiles(prev => [...prev, newTile]);
   };
 
-  // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (draggedIndex !== null && draggedIndex !== index) {
-      setDragOverIndex(index);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const newTiles = [...tiles];
-    const [draggedTile] = newTiles.splice(draggedIndex, 1);
-    newTiles.splice(dropIndex, 0, draggedTile);
-    setTiles(newTiles);
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
   const handleImageUpload = async (id: string, file: File) => {
     // Limit upload to 2MB for Supabase Storage
     if (file.size > 2 * 1024 * 1024) {
       alert("Image is too large. Please use an image smaller than 2MB.");
+      // Reset file input so user can try again
+      if (fileInputRefs.current[id]) {
+        fileInputRefs.current[id]!.value = '';
+      }
       return;
     }
 
@@ -121,12 +84,16 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
         .getPublicUrl(fileName);
 
       // Update the tile with the new image URL
-      handleUpdateTile(id, 'imageUrl', publicUrl);
+      setTiles(prev => prev.map(t => t.id === id ? { ...t, imageUrl: publicUrl } : t));
     } catch (err) {
       console.error('Error uploading image:', err);
       alert('Failed to upload image. Please try again.');
     } finally {
       setUploadingId(null);
+      // Reset file input so the same file can be selected again if needed
+      if (fileInputRefs.current[id]) {
+        fileInputRefs.current[id]!.value = '';
+      }
     }
   };
 
@@ -175,33 +142,15 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
           </button>
         </div>
 
-        <p className="text-sm text-slate-500 mb-4 flex items-center">
-          <GripVertical size={16} className="mr-1 text-slate-400" />
-          Drag tiles to reorder them
-        </p>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {tiles.map((tile, index) => {
+          {tiles.map((tile) => {
             const Icon = IconMap[tile.icon] || IconMap['Globe'];
             const isUploading = uploadingId === tile.id;
-            const isDragging = draggedIndex === index;
-            const isDragOver = dragOverIndex === index;
 
             return (
               <div
                 key={tile.id}
-                draggable={!isSaving}
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`
-                  bg-white p-4 rounded-lg border-2 shadow-sm relative group transition-all
-                  ${isDragging ? 'opacity-50 scale-95 border-teal-400' : 'border-slate-200'}
-                  ${isDragOver ? 'border-teal-500 bg-teal-50' : ''}
-                  ${!isSaving ? 'cursor-grab active:cursor-grabbing' : ''}
-                `}
+                className="bg-white p-4 rounded-lg border-2 border-slate-200 shadow-sm relative group transition-all"
               >
                 <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                    <button
@@ -214,11 +163,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                    </button>
                 </div>
 
-                <div className="flex items-start space-x-3 mb-3">
-                   <div className="pt-2 text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing">
-                     <GripVertical size={20} />
-                   </div>
-                   <div className="flex-1 space-y-3">
+                <div className="space-y-3">
                       {/* Row 1: Label */}
                       <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Label</label>
@@ -286,6 +231,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                             ) : (
                                 <div className="relative">
                                     <input
+                                        ref={(el) => { fileInputRefs.current[tile.id] = el; }}
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => {
@@ -319,7 +265,6 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                           disabled={isSaving}
                         />
                       </div>
-                   </div>
                 </div>
               </div>
             );
