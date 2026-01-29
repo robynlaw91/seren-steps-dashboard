@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, RotateCcw, X, AlertCircle, Plus, Trash2, GripVertical, Loader2 } from 'lucide-react';
 import { TileDefinition } from '../types';
 import { IconMap } from '../constants';
@@ -52,15 +52,8 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
     setTiles(prev => [...prev, newTile]);
   };
 
-  // Drag and drop handlers - only allow drag from grip handle
+  // Drag and drop handlers - only the grip handle is draggable
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    // Only allow drag if it started from the grip handle
-    const target = e.target as HTMLElement;
-    const isGripHandle = target.closest('[data-drag-handle]');
-    if (!isGripHandle) {
-      e.preventDefault();
-      return;
-    }
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
@@ -99,7 +92,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
     setDragOverIndex(null);
   };
 
-  const handleImageUpload = useCallback(async (id: string, file: File) => {
+  const handleImageUpload = async (id: string, file: File) => {
     // Limit upload to 2MB for Supabase Storage
     if (file.size > 2 * 1024 * 1024) {
       alert("Image is too large. Please use an image smaller than 2MB.");
@@ -144,7 +137,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
         fileInputRefs.current[id]!.value = '';
       }
     }
-  }, []);
+  };
 
   const handleRemoveImage = async (id: string, imageUrl: string | undefined) => {
     if (!imageUrl) return;
@@ -206,17 +199,13 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
             return (
               <div
                 key={tile.id}
-                draggable={!isSaving}
-                onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
                 className={`
                   bg-white p-4 rounded-lg border-2 shadow-sm relative group transition-all
                   ${isDragging ? 'opacity-50 scale-95 border-teal-400' : 'border-slate-200'}
                   ${isDragOver ? 'border-teal-500 bg-teal-50' : ''}
-                  ${!isSaving ? 'cursor-grab active:cursor-grabbing' : ''}
                 `}
               >
                 <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -232,14 +221,17 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
 
                 <div className="flex items-start space-x-3 mb-3">
                    <div
-                     data-drag-handle
-                     className="pt-2 text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
+                     draggable={!isSaving}
+                     onDragStart={(e) => handleDragStart(e, index)}
+                     onDragEnd={handleDragEnd}
+                     className="pt-2 text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing select-none"
+                     title="Drag to reorder"
                    >
                      <GripVertical size={20} />
                    </div>
                    <div className="flex-1 space-y-3">
                       {/* Row 1: Label */}
-                      <div onDragStart={(e) => e.stopPropagation()}>
+                      <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Label</label>
                         <input
                           type="text"
@@ -247,12 +239,11 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                           onChange={(e) => handleUpdateTile(tile.id, 'label', e.target.value)}
                           className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
                           disabled={isSaving}
-                          draggable={false}
                         />
                       </div>
 
                       {/* Row 2: URL */}
-                      <div onDragStart={(e) => e.stopPropagation()}>
+                      <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">URL</label>
                         <input
                           type="url"
@@ -261,7 +252,6 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                           placeholder="https://..."
                           className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none font-mono text-xs"
                           disabled={isSaving}
-                          draggable={false}
                         />
                       </div>
 
@@ -305,12 +295,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                                     </button>
                                 </div>
                             ) : (
-                                <div
-                                    className="relative"
-                                    onDragStart={(e) => e.stopPropagation()}
-                                    onDragOver={(e) => e.stopPropagation()}
-                                    onDrop={(e) => e.stopPropagation()}
-                                >
+                                <div className="relative">
                                     <input
                                         ref={(el) => { fileInputRefs.current[tile.id] = el; }}
                                         type="file"
@@ -319,7 +304,6 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                                             const file = e.target.files?.[0];
                                             if (file) handleImageUpload(tile.id, file);
                                         }}
-                                        onClick={(e) => e.stopPropagation()}
                                         className="block w-full text-xs text-slate-500
                                           file:mr-2 file:py-1 file:px-2
                                           file:rounded-full file:border-0
@@ -336,7 +320,7 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                       </div>
 
                        {/* Row 4: Description */}
-                      <div onDragStart={(e) => e.stopPropagation()}>
+                      <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Description</label>
                         <input
                           type="text"
@@ -345,7 +329,6 @@ export const LinkManager: React.FC<LinkManagerProps> = ({
                           placeholder="Short description"
                           className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none"
                           disabled={isSaving}
-                          draggable={false}
                         />
                       </div>
                    </div>
